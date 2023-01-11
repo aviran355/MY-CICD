@@ -1,0 +1,105 @@
+trigger: 
+  branches:
+    include: 
+      - refs/heads/main/*
+
+variables:
+  GIT_COMMIT: $(Build.SourceVersion)
+
+stages:
+  - stage: CheckoutTags
+    jobs:
+      - job: GetLastCommitTags
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            name: GetTags
+            inputs:
+              targetType: 'inline'
+              script: |
+                TAGS=$(git tag --points-at $(GIT_COMMIT))
+                for tag in $TAGS
+                do
+                  echo "${tag^^}"
+                  echo "##vso[task.setvariable variable=${tag^^};isOutput=true]true"
+                done
+                
+  - stage: AMEX_ANDROID
+    displayName: AMEX ANDROID
+    dependsOn: 
+    - CheckoutTags
+    condition: eq(dependencies.CheckoutTags.outputs['GetLastCommitTags.GetTags.AMEX_ANDROID'], 'true')
+    variables:
+      AMEX_ANDROID: $[ stageDependencies.CheckoutTags.GetLastCommitTags.outputs['GetTags.AMEX_ANDROID'] ]
+    jobs:
+      - job: CI_STEP
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: | 
+                echo 'hello from amex_android'
+                echo $(AMEX_ANDROID)
+  
+  - stage: AMEX_IOS
+    displayName: AMEX IOS
+    dependsOn: 
+    - CheckoutTags
+    condition: eq(dependencies.CheckoutTags.outputs['GetLastCommitTags.GetTags.AMEX_IOS'], 'true')
+    variables:
+      AMEX_IOS: $[ stageDependencies.CheckoutTags.GetLastCommitTags.outputs['GetTags.AMEX_IOS'] ]
+    jobs:
+      - job: CI_STEP
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: | 
+                echo 'hello from amex_ios'   
+                echo $(AMEX_IOS)
+
+  - stage: ISRACARD_IOS
+    displayName: ISRACARD IOS
+    dependsOn: 
+    - CheckoutTags
+    condition: eq(dependencies.CheckoutTags.outputs['GetLastCommitTags.GetTags.ISRACARD_IOS'], 'true')
+    variables:
+      ISRACARD_IOS: $[ stageDependencies.CheckoutTags.GetLastCommitTags.outputs['GetTags.ISRACARD_IOS'] ]
+    jobs:
+      - job: CI_STEP
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: | 
+                echo 'hello from ISRACARD_IOS'     
+                echo $(AMEX_ANDROID)
+
+  - stage: ISRACARD_ANDROID
+    displayName: ISRACARD ANDROID
+    dependsOn: 
+    - CheckoutTags
+    condition: eq(dependencies.CheckoutTags.outputs['GetLastCommitTags.GetTags.ISRACARD_ANDROID'], 'true')
+    variables:
+      ISRACARD_ANDROID: $[ stageDependencies.CheckoutTags.GetLastCommitTags.outputs['GetTags.ISRACARD_ANDROID'] ]
+    jobs:
+      - job: CI_STEP
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: | 
+                echo 'hello from isracard_android'
+                echo $(ISRACARD_ANDROID)
+
+                
+   
